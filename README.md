@@ -1,7 +1,10 @@
 A fork from [bunyan-redis](https://github.com/harrisiirak/bunyan-redis)
 ============
 
-This fork adds client rotation features.
+This fork adds some features dedicated for Aftership Logger.
+
+1. client rotation.
+2. aggressive buffer trancation
 
 Usage
 ========
