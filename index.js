@@ -11,31 +11,64 @@ var stringify = require('json-stringify-safe');
  * @param {Object} opts Transport options object
  * @param {String} opts.container Redis key
  * @param {Number} opts.length List max length
- * @param {Object} opts.client Redis client instance
  * @param {String} opts.host Redis host
  * @param {Number} opts.port Redis port
  * @param {Number} opts.db Redis database index
  * @param {String} opts.password Redis password
- *
+ * @param {String} opts.rotation_interval, compliant with moment.js time duration format, by default no rotation
+ * @param {Number} opts.drop_factor, by which overflowing items are dropped
  * @constructor
  */
 function RedisTransport (opts) {
+
   this._container = opts.container || 'logs';
   this._length = opts.length || undefined;
-  this._client = opts.client || redis.createClient(opts.port, opts.host);
+  this._client = this.createClient(opts);
+  this._drop_factor = opts.drop_factor;
+
+  if(opts.rotation_interval)
+  {
+
+    var that = this;
+    try
+    {
+      var sec = require('moment').duration(opts.rotation_interval).asSeconds();
+      setInterval(function(){
+        var new_client = that.createClient(opts);
+        var old_client = that._client;
+        that._client = new_client;
+	    old_client.quit();
+      },sec)
+    }catch (e)
+    {
+      console.error(e)
+    }
+  }
+
+}
+
+
+
+RedisTransport.prototype = Object.create(events.EventEmitter.prototype);
+
+RedisTransport.prototype.createClient = function(opts)
+{
+
+  var client = redis.createClient(opts.port, opts.host);
 
   // Authorize cleint
   if (opts.hasOwnProperty('password')) {
-    this._client.auth(opts.password);
+    client.auth(opts.password);
   }
 
   // Set database index
   if (opts.hasOwnProperty('db')) {
-    this._client.select(opts.db);
+    client.select(opts.db);
   }
-}
 
-RedisTransport.prototype = Object.create(events.EventEmitter.prototype);
+  return client;
+
+};
 
 /**
  * Push bunyan log entry to redis list
@@ -81,7 +114,7 @@ RedisTransport.prototype.write = function write (entry) {
           return next();
         }
 
-        client.ltrim(self._container, 0, self._length, function dataStored (err) {
+        client.ltrim(self._container, 0, Math.ceil(self._length * (1 - self._drop_factor)), function dataStored (err) {
           if (err) {
             return next(err);
           }

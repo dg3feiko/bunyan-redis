@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "json-stringify-safe": "^5.0.0",
+    "moment": "^2.8.4",
     "redis": "^0.10.3",
     "vasync": "^1.4.3"
   },
