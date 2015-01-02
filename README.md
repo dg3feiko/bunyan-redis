@@ -1,13 +1,7 @@
-bunyan-redis
+A fork from [bunyan-redis](https://github.com/harrisiirak/bunyan-redis)
 ============
 
-Bunyan redis transport
-
-Installation
-========
-```bash
-npm install bunyan-redis
-```
+This fork adds client rotation features.
 
 Usage
 ========
