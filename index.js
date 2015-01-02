@@ -24,7 +24,7 @@ function RedisTransport (opts) {
   this._container = opts.container || 'logs';
   this._length = opts.length || undefined;
   this._client = this.createClient(opts);
-  this._drop_factor = opts.drop_factor;
+  this._drop_factor = opts.drop_factor || 0;
 
   if(opts.rotation_interval)
   {
