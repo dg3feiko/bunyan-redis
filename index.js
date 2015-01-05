@@ -16,13 +16,14 @@ var stringify = require('json-stringify-safe');
  * @param {Number} opts.port Redis port
  * @param {Number} opts.db Redis database index
  * @param {String} opts.password Redis password
- *
+ * @param {Number} opts.drop_factor, by which overflown items are dropped
  * @constructor
  */
 function RedisTransport (opts) {
   this._container = opts.container || 'logs';
   this._length = opts.length || undefined;
   this._client = opts.client || redis.createClient(opts.port, opts.host);
+  this._drop_factor = opts.drop_factor || 0;
 
   // Authorize cleint
   if (opts.hasOwnProperty('password')) {
@@ -51,25 +52,15 @@ RedisTransport.prototype.write = function write (entry) {
   vasync.pipeline({
     arg: {},
     funcs: [
-      // Find list length
-      function findListLength (args, next) {
-        client.llen(self._container, function listLengthFound (err, length) {
-          if (err) {
-            return next(err);
-          }
-
-          args.length = length;
-          return next(null, length);
-        });
-      },
-
       // Push data
       function pushEntryToList (args, next) {
         var data = stringify(entry, null, 2);
-        client.lpush(self._container, data, function dataStored (err) {
+        client.lpush(self._container, data, function dataStored (err, len) {
           if (err) {
             return next(err);
           }
+
+          args.length = len;
 
           return next();
         });
@@ -81,7 +72,11 @@ RedisTransport.prototype.write = function write (entry) {
           return next();
         }
 
-        client.ltrim(self._container, 0, self._length, function dataStored (err) {
+        var after_len = Math.ceil(self._length * (1- self._drop_factor));
+
+        self.emit('trim','current length:'+args.length+' after trimming length:'+after_len);
+
+        client.ltrim(self._container, 0, after_len, function dataStored (err) {
           if (err) {
             return next(err);
           }
