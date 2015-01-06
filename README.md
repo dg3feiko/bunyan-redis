@@ -15,7 +15,19 @@ Usage
 With existing redis client connection.
 
 ```javascript
-var client = redis.createClient(); //or any other redis client, e.g. sentinel-ready one
+//normal client
+var client = require('redis').createClient(); 
+
+//sentinel client
+var client = require('redis-sentinel').createClient(
+[
+    {host: 'SENTINEL_HOST_1', port: PORT},
+    {host: 'SENTINEL_HOST_2', port: PORT}
+],
+masterName, 
+opts)
+);
+
 
 var transport = new RedisTransport({
   container: 'logs:myslug',//convention `logs:subject`
