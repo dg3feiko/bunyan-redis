@@ -10,11 +10,11 @@ transport = new RedisTransport({
 	container: 'logs',
 	client: client,
 	drop_factor: 0.25,
-	length:10
+	length:1000
 });
 
 logger = bunyan.createLogger({
-	name: 'bunyan-redis',
+	name: 'name',
 	streams: [{
 		type: 'raw',
 		level: 'trace',
@@ -22,15 +22,21 @@ logger = bunyan.createLogger({
 	}]
 });
 
-transport.on('logged',function(item){
-	console.log('logged');
-});
 
-transport.on('trim',function(item){
-	console.log('trim ',item);
-});
+
+//transport.on('logged',function(item){
+//	console.log('logged');
+//});
+
+//transport.on('trim',function(item){
+//	console.log('trim',item);
+//});
 
 
 setInterval(function(){
-	logger.info('foo bar');
-},500);
+	logger.info('foo' + new Date());
+	if(Math.random() > 0.5)
+	{
+		logger.info('bar' + new Date());
+	}
+},200);
