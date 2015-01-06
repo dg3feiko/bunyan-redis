@@ -31,7 +31,8 @@ opts)
 
 var transport = new RedisTransport({
   container: 'logs:myslug',//convention `logs:subject`
-  client: client
+  client: client,
+  db: DB_INDEX
 });
 
 var logger = bunyan.createLogger({
