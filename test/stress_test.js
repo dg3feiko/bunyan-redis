@@ -6,12 +6,12 @@ var bunyan = require('bunyan');
 var _ = require('lodash');
 
 
-var topics = _.map(_.range(10), function (num) {
+var topics = _.map(_.range(100), function (num) {
 	return 'topic' + num
 });
 
 var loggers = _.map(topics, function (t) {
-	var client = require('redis').createClient(6379, '192.168.59.103');
+	var client = require('redis').createClient(6379, '130.211.130.39');
 
 	var transport = new RedisTransport({
 		container: 'logs:'+t,
@@ -32,12 +32,14 @@ var loggers = _.map(topics, function (t) {
 });
 
 _.forEach(loggers,function(logger){
-	setInterval(function(){
-		var times = _.random(0,100);
 
-		for(var i = 0;i<times;i++)
-		{
-			logger.warn("msg: "+new Date());
-		}
-	},1000+ _.random(0,100));
+	logger.warn("msg: "+new Date());
+	//setTimeout(function(){
+	//	//var times = _.random(0,100);
+	//	//
+	//	//for(var i = 0;i<times;i++)
+	//	//{
+	//	logger.warn("msg: " + new Date());
+	//	//}
+	//},8000);
 });
