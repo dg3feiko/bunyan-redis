@@ -17,13 +17,15 @@ var stringify = require('json-stringify-safe');
  * @param {Number} opts.db Redis database index
  * @param {String} opts.password Redis password
  * @param {Number} opts.drop_factor, by which overflown items are dropped
+ * @param {Boolean} opts.diagnosis, enable diagnosis mode, which may insert some info into redis
  * @constructor
  */
 function RedisTransport (opts) {
-  this._container = opts.container || 'logs';
+  this._container = opts.container || 'logs:unknown';
   this._length = opts.length || undefined;
   this._client = opts.client || redis.createClient(opts.port, opts.host);
   this._drop_factor = opts.drop_factor || 0;
+  this._diagnosis = opts.diagnosis || false;
 
   // Authorize cleint
   if (opts.hasOwnProperty('password')) {
@@ -76,6 +78,8 @@ RedisTransport.prototype.write = function write (entry) {
 
         self.emit('trim','current length:'+args.length+' after trimming length:'+after_len);
 
+        args.trimmed = true;
+
         client.ltrim(self._container, 0, after_len, function dataStored (err) {
           if (err) {
             return next(err);
@@ -83,6 +87,27 @@ RedisTransport.prototype.write = function write (entry) {
 
           return next();
         });
+      },
+
+      //diagnosis
+      function report (args, next) {
+        if(self._diagnosis && args.trimmed)
+        {
+          var hash_name = 'stat:trim';
+          var field_name = self._container;
+          client.hincrby(hash_name, field_name, 1, function(err){
+            if(err)
+            {
+              return next(err);
+            }else
+            {
+              return next();
+            }
+          });
+        }else
+        {
+          return next();
+        }
       }
     ]
   }, function onEnd (err, results) {
