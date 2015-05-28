@@ -32,8 +32,8 @@ function RedisTransport (opts) {
     this._client.auth(opts.password);
   }
 
-  // Set database index
-  if (opts.hasOwnProperty('db')) {
+  // Set database index if no pass-in client
+  if (opts.hasOwnProperty('db') && (!opts.client)) {
     this._client.select(opts.db);
   }
 }
