@@ -6,7 +6,7 @@ Bunyan redis transport
 Installation
 ========
 ```bash
-npm install bunyan-redis
+npm install @aftership/bunyan-redis
 ```
 
 Usage
